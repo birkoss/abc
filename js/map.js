@@ -1,7 +1,17 @@
 class Map extends Phaser.GameObjects.Container {
     constructor(scene, x, y) {
-        super(scene, x, y);
+        super(scene);
         scene.add.existing(this);
+
+        this.options = {
+            fallSpeed: 250,
+            grid: {
+                width: 5,
+                height: 8
+            }
+        };
+
+        this.tileSize = 70;
 
         this.create();
 
@@ -14,9 +24,6 @@ class Map extends Phaser.GameObjects.Container {
 
         this.pool = [];
 
-        this.altTintColor = 0x42a7bd;
-        this.tintColor = 0xd45477;
-
         this.background = this.scene.add.sprite(0, 0, "tileset:forest");
         this.add(this.background);
 
@@ -25,45 +32,33 @@ class Map extends Phaser.GameObjects.Container {
             this.totalFrequencies += this.scene.cache.json.get('data:frequency')[letter];
         }
 
-        for(var y = 0; y < gameOptions.fieldSize.height; y++) {
+        for(var y = 0; y < this.options.grid.height; y++) {
             this.tiles[y] = [];
-            for(var x = 0; x < gameOptions.fieldSize.width; x++) {
-                let container = this.scene.add.container();
-                this.add(container);
+            for(var x = 0; x < this.options.grid.width; x++) {
+                var tileXPos = x * this.tileSize + this.tileSize / 2;
+                var tileYPos = y * this.tileSize + this.tileSize / 2;
 
-                var tileXPos = x * gameOptions.tileSize + gameOptions.tileSize / 2;
-                var tileYPos = y * gameOptions.tileSize + gameOptions.tileSize / 2;
+                var tile = new Tile(this.scene);
+                tile.setCoordinate(x, y);
+                tile.setLetter(this.pickLetter());
 
-                var theTile = this.scene.add.sprite(0, 0, "tiles");
-                theTile.setScale(0.5);
-                theTile.setOrigin(0.5);
-                theTile.picked = false;
-                theTile.coordinate = new Phaser.Math.Vector2(x, y);
-                this.tiles[y][x] = container;
+                this.tiles[y][x] = tile;
 
-                theTile.value = this.pickLetter();
-                theTile.tint = this.tintColor;
-                
-                let label = this.scene.add.bitmapText(0, 0, "font:gui", theTile.value, 30, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
-                //label.setScale(0.5);
-                label.setOrigin(0.5);
-                label.x = -2;
+                tile.x = tileXPos;
+                tile.y = tileYPos;
 
-                container.add(theTile);
-                container.add(label);
-
-                container.x = tileXPos;
-                container.y = tileYPos;
+                this.add(tile);
             }
         }
 
-        this.background.displayWidth = gameOptions.tileSize * gameOptions.fieldSize.width;
-        this.background.displayHeight = gameOptions.tileSize * gameOptions.fieldSize.height;
+        /* Make the background as big as the tiles */
+        this.background.displayWidth = this.tileSize * this.options.grid.width;
+        this.background.displayHeight = this.tileSize * this.options.grid.height;
         this.background.x = this.background.displayWidth / 2;
         this.background.y = this.background.displayHeight / 2;
-
         this.background.setInteractive();
-        this.background.on('pointerdown', this.tilePicked, this);
+        
+        this.startTurn();
     }
 
     pickLetter() {
@@ -87,27 +82,26 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     tileMoved(e) {
-        var y = Math.floor((e.position.y - this.y) / gameOptions.tileSize);
-        var x = Math.floor((e.position.x - this.x) / gameOptions.tileSize);
+        var y = Math.floor((e.position.y - this.y) / this.tileSize);
+        var x = Math.floor((e.position.x - this.x) / this.tileSize);
 
-        let tile = this.tiles[y][x].getAt(0);
+        let tile = this.tiles[y][x];
 
         /* Only apply the movement if we are close to the center of the tile */
-        var distance = new Phaser.Math.Vector2((e.position.x - this.x) - (x * gameOptions.tileSize), (e.position.y - this.y) - (y * gameOptions.tileSize)).distance(new Phaser.Math.Vector2(gameOptions.tileSize / 2, gameOptions.tileSize / 2));
-        if (distance > gameOptions.tileSize * 0.4) {
+        var distance = new Phaser.Math.Vector2((e.position.x - this.x) - (x * this.tileSize), (e.position.y - this.y) - (y * this.tileSize)).distance(new Phaser.Math.Vector2(this.tileSize / 2, this.tileSize / 2));
+        if (distance > this.tileSize * 0.4) {
             return;
         }
 
         if (!tile.picked && this.isNeighboor(tile.coordinate, this.visitedTiles[ this.visitedTiles.length - 1 ])) {
-            tile.picked = true;
-            tile.tint = this.altTintColor;
+            tile.select();
             this.visitedTiles.push(tile.coordinate);
 
             var fromPos = this.visitedTiles[this.visitedTiles.length - 2];
             var arrow = this.scene.add.sprite(this.tiles[fromPos.y][fromPos.x].x, this.tiles[fromPos.y][fromPos.x].y, "arrows");
             this.add(arrow);
             arrow.setScale(0.5);
-            arrow.tint = this.tintColor;
+            arrow.tint = 0xd45477;
             arrow.setOrigin(0.5);
             var tileDiff = new Phaser.Math.Vector2(this.visitedTiles[this.visitedTiles.length - 1].x, this.visitedTiles[this.visitedTiles.length - 1].y)
             tileDiff.subtract(new Phaser.Math.Vector2(this.visitedTiles[this.visitedTiles.length - 2].x, this.visitedTiles[this.visitedTiles.length - 2].y));
@@ -126,17 +120,16 @@ class Map extends Phaser.GameObjects.Container {
                 }
             }
 
-            this.addAnswer(tile.value);
+            this.addAnswer(tile.letter);
 
             this.arrows.push(arrow);
         } else if (this.visitedTiles.length > 1) {
             if (this.visitedTiles[ this.visitedTiles.length - 2 ].x == x && this.visitedTiles[ this.visitedTiles.length - 2 ].y == y) {
                 let previousCoordinate = this.visitedTiles[ this.visitedTiles.length - 1 ];
 
-                let previousTile = this.tiles[previousCoordinate.y][previousCoordinate.x].getAt(0);
+                let previousTile = this.tiles[previousCoordinate.y][previousCoordinate.x];
 
-                previousTile.picked = false;
-                previousTile.tint = this.tintColor;
+                previousTile.unselect();
 
                 this.visitedTiles.pop();
 
@@ -159,8 +152,7 @@ class Map extends Phaser.GameObjects.Container {
         this.arrows.length = 0;
 
         for (let i = 0; i < this.visitedTiles.length; i++) {
-            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].getAt(0).tint = this.tintColor;
-            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].getAt(0).picked = false;
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
         }
 
         if (this.answer.length == 2) {
@@ -172,78 +164,70 @@ class Map extends Phaser.GameObjects.Container {
             }
 
             /* Fall remaining tiles */
-            for (var i = gameOptions.fieldSize.height - 1; i >= 0; i--) {
-                for (var j = 0; j < gameOptions.fieldSize.width; j++) {
+            for (var i = this.options.grid.height - 1; i >= 0; i--) {
+                for (var j = 0; j < this.options.grid.width; j++) {
                     if (this.tiles[i][j] != null) {
                         var holes = this.findHolesBelow(i, j);
                         if(holes > 0) {
-                            var coordinate = new Phaser.Math.Vector2(this.tiles[i][j].getAt(0).coordinate.x, this.tiles[i][j].getAt(0).coordinate.y);
+                            var coordinate = new Phaser.Math.Vector2(this.tiles[i][j].coordinate.x, this.tiles[i][j].coordinate.y);
                             var destination = new Phaser.Math.Vector2(j, i + holes);
                             
                             this.scene.tweens.add({
                                 targets: this.tiles[i][j],
-                                y: this.tiles[i][j].y + holes * gameOptions.tileSize,
-                                duration: gameOptions.fallSpeed,
-
-                                onComplete: this.nextTurn,
-                                callbackScope: this,
+                                y: this.tiles[i][j].y + holes * this.tileSize,
+                                duration: this.options.fallSpeed,
                             });
-                            console.log(destination.x + "x" + destination.y);
                             this.tiles[destination.y][destination.x] = this.tiles[i][j]
                             this.tiles[coordinate.y][coordinate.x] = null;
-                            this.tiles[destination.y][destination.x].getAt(0).coordinate = new Phaser.Math.Vector2(destination.x, destination.y)
+                            this.tiles[destination.y][destination.x].coordinate = new Phaser.Math.Vector2(destination.x, destination.y)
                         }
                     }
                 }
             }
 
             /* Place new tiles from the pool in missing spot */
-            for (var i = 0; i < gameOptions.fieldSize.width; i++) {
+            for (var i = 0; i < this.options.grid.width; i++) {
                 var holes = this.findHolesInCol(i);
                 if (holes > 0) {
                     for (var j = 1; j <= holes; j++) {
-                        var tileXPos = i * gameOptions.tileSize + gameOptions.tileSize / 2;
-                        var tileYPos = -j * gameOptions.tileSize + gameOptions.tileSize / 2;
+                        var tileXPos = i * this.tileSize + this.tileSize / 2;
+                        var tileYPos = -j * this.tileSize + this.tileSize / 2;
                         var theTile = this.pool.pop();
 
                         theTile.x = tileXPos;
                         theTile.y = tileYPos;
                         theTile.visible = true;
-                        theTile.getAt(0).tint = this.tintColor;
-                        theTile.getAt(0).picked = false;
+
+                        theTile.unselect();
 
                         this.scene.tweens.add({
                             targets: theTile,
-                            y: theTile.y + holes * gameOptions.tileSize,
-                            duration: gameOptions.fallSpeed,
-
-                            onComplete: this.nextTurn,
-                            callbackScope: this,
+                            y: theTile.y + holes * this.tileSize,
+                            duration: this.options.fallSpeed,
                         });
                         
-                        theTile.getAt(0).coordinate = new Phaser.Math.Vector2(i, holes - j);
-                        theTile.getAt(0).value = this.pickLetter();
-                        theTile.getAt(1).text = theTile.getAt(0).value;
+                        theTile.coordinate = new Phaser.Math.Vector2(i, holes - j);
+                        theTile.setLetter(this.pickLetter());
                         this.tiles[holes - j][i] = theTile;
                     }
                 }
             }
-        } else {
-            this.nextTurn();
         }
+
+        this.startTurn();
 
         this.visitedTiles = [];
         this.visitedTiles.length = 0;
     }
 
     debugTiles() {
-        for(var y = 0; y < gameOptions.fieldSize.height; y++) {
+        for(var y = 0; y < this.options.grid.height; y++) {
             let row = [];
-            for(var x = 0; x < gameOptions.fieldSize.width; x++) {
+            for(var x = 0; x < this.options.grid.width; x++) {
                 if (this.tiles[y][x] == null) {
                     row.push(" (_x_)");
                 } else {
-                    row.push(this.tiles[y][x].getAt(1).text+"(" + this.tiles[y][x].getAt(0).coordinate.x + "x" + this.tiles[y][x].getAt(0).coordinate.y + ")");
+                    row.push(this.tiles[y][x].label.text+"(" + this.tiles[y][x].coordinate.x + "x" + this.tiles[y][x].coordinate.y + ")");
                 }
             }
             console.log(row);
@@ -251,15 +235,16 @@ class Map extends Phaser.GameObjects.Container {
         console.error("");
     }
 
-    nextTurn() {
-        console.log("nextTurn");
+    startTurn() {
+        console.log("startTurn");
+
         this.background.off('pointerdown', this.tilePicked, this);
         this.background.on('pointerdown', this.tilePicked, this);
     }
 
     findHolesInCol(col){
         var result = 0;
-        for(var i = 0; i < gameOptions.fieldSize.height; i++){
+        for(var i = 0; i < this.options.grid.height; i++){
             if(this.tiles[i][col] == null){
                 result ++;
             }
@@ -269,7 +254,7 @@ class Map extends Phaser.GameObjects.Container {
 
     findHolesBelow(row, col) {
         var result = 0;
-        for (var i = row + 1; i < gameOptions.fieldSize.height; i++) {
+        for (var i = row + 1; i < this.options.grid.height; i++) {
             if (this.tiles[i][col] == null) {
                 result ++;
             }
@@ -283,15 +268,14 @@ class Map extends Phaser.GameObjects.Container {
         this.visitedTiles = [];
         this.visitedTiles.length = 0;
 
-        var y = Math.floor((e.position.y - this.y) / gameOptions.tileSize);
-        var x = Math.floor((e.position.x - this.x) / gameOptions.tileSize);
+        var y = Math.floor((e.position.y - this.y) / this.tileSize);
+        var x = Math.floor((e.position.x - this.x) / this.tileSize);
 
-        let tile = this.tiles[y][x].getAt(0);
+        let tile = this.tiles[y][x];
 
-        this.addAnswer(tile.value);
+        this.addAnswer(tile.letter);
 
-        tile.tint = this.altTintColor;
-        tile.picked = true;
+        tile.select();
 
         this.background.off('pointerdown', this.tilePicked, this);
 
