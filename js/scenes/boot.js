@@ -19,6 +19,7 @@ class BootScene extends Phaser.Scene {
         this.load.bitmapFont("bignumbersfont", "assets/fonts/bignumbersfont.png", "assets/fonts/bignumbersfont.fnt");
 
         this.load.json('data:frequency', 'assets/frequency.json');
+        this.load.json('data:words', 'assets/words.json');
     }
  
     create() {

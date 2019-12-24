@@ -155,7 +155,18 @@ class Map extends Phaser.GameObjects.Container {
             this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
         }
 
-        if (this.answer.length == 2) {
+        let wordValid = false;
+        if (this.scene.cache.json.get('data:words')[this.answer.length]) {
+            let words = this.scene.cache.json.get('data:words')[this.answer.length];
+            for(let i=0; i<words.length; i++) {
+                if (words[i] == this.answer) {
+                    wordValid = true;
+                    break;
+                }
+            }
+        }
+
+        if (wordValid) {
             /* Remove existing tiles and add those in a pool */
             for (var i = 0; i < this.visitedTiles.length; i++) {
                 this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].visible = false;
