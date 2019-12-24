@@ -141,6 +141,19 @@ class Map extends Phaser.GameObjects.Container {
         }
     }
 
+    isValidWord() {
+        if (this.scene.cache.json.get('data:words')[this.answer.length]) {
+            let words = this.scene.cache.json.get('data:words')[this.answer.length];
+            for(let i=0; i<words.length; i++) {
+                if (words[i] == this.answer) {
+                    return true;
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+
     tileReleased(e) {
         this.background.off('pointerup', this.tileReleased, this);
         this.background.off('pointermove', this.tileMoved, this);
@@ -155,16 +168,7 @@ class Map extends Phaser.GameObjects.Container {
             this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
         }
 
-        let wordValid = false;
-        if (this.scene.cache.json.get('data:words')[this.answer.length]) {
-            let words = this.scene.cache.json.get('data:words')[this.answer.length];
-            for(let i=0; i<words.length; i++) {
-                if (words[i] == this.answer) {
-                    wordValid = true;
-                    break;
-                }
-            }
-        }
+        let wordValid = this.isValidWord();
 
         if (wordValid) {
             /* Remove existing tiles and add those in a pool */
@@ -303,7 +307,7 @@ class Map extends Phaser.GameObjects.Container {
             this.answer = this.answer.substr(0, this.answer.length-1);
         }
         
-        this.emit("ANSWER_CHANGED", this.answer);
+        this.emit("ANSWER_CHANGED", this.answer, this.isValidWord());
     }
 
 };

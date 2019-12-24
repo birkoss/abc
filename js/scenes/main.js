@@ -21,12 +21,17 @@ class MainScene extends Phaser.Scene {
     /* Events */
 
  
-    onMapAnswerChanged(answer) {
+    onMapAnswerChanged(answer, isValid) {
+        if (isValid) {
+            this.panel.points = answer.length * (answer.length - 1);
+        } else {
+            this.panel.points = 0;
+        }
         this.panel.answer = answer;
         this.panel.refresh();
     }
 
-    onMapAnswerSubmitted(answer) {
+    onMapAnswerSubmitted(answer, isValid) {
         this.panel.answer = "";
         this.panel.refresh();
     }

@@ -5,6 +5,7 @@ class Panel extends Phaser.GameObjects.Container {
         scene.add.existing(this);
 
         this.answer = "";
+        this.points = 0;
 
         this.create();
     }
@@ -21,16 +22,23 @@ class Panel extends Phaser.GameObjects.Container {
         this.add(this.background);
 
 
-        this.txt_answer = this.scene.add.bitmapText(0, 0, "font:gui", "", 30, Phaser.GameObjects.BitmapText.ALIGN_CENTER).setOrigin(0);
+        this.txt_answer = this.scene.add.bitmapText(0, 0, "font:gui", "", 20, Phaser.GameObjects.BitmapText.ALIGN_CENTER).setOrigin(0);
         this.txt_answer.tint = 0xdcdcdc;
         this.txt_answer.y = 12;
         this.txt_answer.x = 10;
         this.add(this.txt_answer);
+
+        this.txt_points = this.scene.add.bitmapText(0, 0, "font:gui", "", 20, Phaser.GameObjects.BitmapText.ALIGN_RIGHT).setOrigin(1, 0);
+        this.txt_points.tint = 0xdcdcdc;
+        this.txt_points.y = 12;
+        this.txt_points.x = 360;
+        this.add(this.txt_points);
 
         this.refresh();
     }
 
     refresh() {
         this.txt_answer.text = "Answer:" + this.answer;
+        this.txt_points.text = "Points:" + this.points;
     }
 };
