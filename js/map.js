@@ -56,6 +56,7 @@ class Map extends Phaser.GameObjects.Container {
         this.background.displayHeight = this.tileSize * this.options.grid.height;
         this.background.x = this.background.displayWidth / 2;
         this.background.y = this.background.displayHeight / 2;
+        this.background.alpha = 0.1;
         this.background.setInteractive();
         
         this.startTurn();
@@ -81,6 +82,31 @@ class Map extends Phaser.GameObjects.Container {
         return (Math.abs(pos1.x - pos2.x) <= 1) && (Math.abs(pos1.y - pos2.y) <= 1);
     }
 
+    selectTile(tile) {
+        tile.select();
+        this.visitedTiles.push(tile.coordinate);
+
+        this.highlightNeighboors(tile, true);
+    }
+
+    highlightNeighboors(tile, status) {
+        for (let x2=-1; x2<=1; x2++) {
+            for (let y2=-1; y2<=1; y2++) {
+                if ((x2 == 0 || y2 == 0) && (x2 != y2)) {
+                    let newX = tile.coordinate.x + x2;
+                    let newY = tile.coordinate.y + y2;
+                    if (newX >= 0 && newX < this.options.grid.width && newY >= 0 && newY < this.options.grid.height) {
+                        if (status) {
+                            this.tiles[newY][newX].highlight();
+                        } else {
+                            this.tiles[newY][newX].unhighlight();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     tileMoved(e) {
         var y = Math.floor((e.position.y - this.y) / this.tileSize);
         var x = Math.floor((e.position.x - this.x) / this.tileSize);
@@ -94,14 +120,13 @@ class Map extends Phaser.GameObjects.Container {
         }
 
         if (!tile.picked && this.isNeighboor(tile.coordinate, this.visitedTiles[ this.visitedTiles.length - 1 ])) {
-            tile.select();
-            this.visitedTiles.push(tile.coordinate);
+            this.selectTile(tile);
 
             var fromPos = this.visitedTiles[this.visitedTiles.length - 2];
             var arrow = this.scene.add.sprite(this.tiles[fromPos.y][fromPos.x].x, this.tiles[fromPos.y][fromPos.x].y, "arrows");
             this.add(arrow);
             arrow.setScale(0.5);
-            arrow.tint = 0xd45477;
+            arrow.tint = 0xd3bf8f;
             arrow.setOrigin(0.5);
             var tileDiff = new Phaser.Math.Vector2(this.visitedTiles[this.visitedTiles.length - 1].x, this.visitedTiles[this.visitedTiles.length - 1].y)
             tileDiff.subtract(new Phaser.Math.Vector2(this.visitedTiles[this.visitedTiles.length - 2].x, this.visitedTiles[this.visitedTiles.length - 2].y));
@@ -125,16 +150,22 @@ class Map extends Phaser.GameObjects.Container {
             this.arrows.push(arrow);
         } else if (this.visitedTiles.length > 1) {
             if (this.visitedTiles[ this.visitedTiles.length - 2 ].x == x && this.visitedTiles[ this.visitedTiles.length - 2 ].y == y) {
-                let previousCoordinate = this.visitedTiles[ this.visitedTiles.length - 1 ];
+                let coordinate = this.visitedTiles.pop();
 
-                let previousTile = this.tiles[previousCoordinate.y][previousCoordinate.x];
+                /* Remove the last tile, and unselect its neighboors */
+                let tile = this.tiles[coordinate.y][coordinate.x];
+                tile.unselect();
+                this.highlightNeighboors(tile);
 
-                previousTile.unselect();
+                /* Remove the last arrow */
+                let arrow = this.arrows.pop();
+                arrow.destroy();
 
-                this.visitedTiles.pop();
-
-                this.arrows[this.arrows.length - 1].destroy();
-                this.arrows.pop();
+                /* Retry to highlight all visitedTiles neighboors */
+                this.visitedTiles.forEach(single_coordinate => {
+                    let tile = this.tiles[single_coordinate.y][single_coordinate.x];
+                    this.highlightNeighboors(tile, true);
+                }, this);
 
                 this.addAnswer("");
             }
@@ -164,7 +195,20 @@ class Map extends Phaser.GameObjects.Container {
         this.arrows = [];
         this.arrows.length = 0;
 
+        /* Add all highlighted tiles in the visitedTiles to remove them */
+        for(var y = 0; y < this.options.grid.height; y++) {
+            for(var x = 0; x < this.options.grid.width; x++) {
+                if (this.tiles[y][x].highlighted && !this.tiles[y][x].picked) {
+                    this.visitedTiles.push(new Phaser.Math.Vector2(x, y));
+                }
+            }
+        }
+
+        console.log(this.visitedTiles.length);
+
+        /* Unselect and unhighligth all tiles */
         for (let i = 0; i < this.visitedTiles.length; i++) {
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unhighlight();
             this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
         }
 
@@ -290,14 +334,12 @@ class Map extends Phaser.GameObjects.Container {
 
         this.addAnswer(tile.letter);
 
-        tile.select();
-
         this.background.off('pointerdown', this.tilePicked, this);
 
         this.background.on('pointerup', this.tileReleased, this);
         this.background.on('pointermove', this.tileMoved, this);
 
-        this.visitedTiles.push(tile.coordinate);
+        this.selectTile(tile);
     }
 
     addAnswer(val) {
