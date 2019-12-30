@@ -20,6 +20,8 @@ class Map extends Phaser.GameObjects.Container {
 
     create() {
         this.tiles = [];
+        this.visitedTiles = [];
+
         this.arrows = [];
 
         this.pool = [];
@@ -204,79 +206,75 @@ class Map extends Phaser.GameObjects.Container {
             }
         }
 
-        console.log(this.visitedTiles.length);
-
-        /* Unselect and unhighligth all tiles */
-        for (let i = 0; i < this.visitedTiles.length; i++) {
-            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unhighlight();
-            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
-        }
-
         let wordValid = this.isValidWord();
 
         if (wordValid) {
-            /* Remove existing tiles and add those in a pool */
-            for (var i = 0; i < this.visitedTiles.length; i++) {
-                this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].visible = false;
-                this.pool.push(this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x]);
-                this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x] = null;
-            }
+            this.emit("ANSWER_SUBMITTED", this.answer);
+ 
+        } else {
+            this.startTurn();
+        }
+    }
 
-            /* Fall remaining tiles */
-            for (var i = this.options.grid.height - 1; i >= 0; i--) {
-                for (var j = 0; j < this.options.grid.width; j++) {
-                    if (this.tiles[i][j] != null) {
-                        var holes = this.findHolesBelow(i, j);
-                        if(holes > 0) {
-                            var coordinate = new Phaser.Math.Vector2(this.tiles[i][j].coordinate.x, this.tiles[i][j].coordinate.y);
-                            var destination = new Phaser.Math.Vector2(j, i + holes);
-                            
-                            this.scene.tweens.add({
-                                targets: this.tiles[i][j],
-                                y: this.tiles[i][j].y + holes * this.tileSize,
-                                duration: this.options.fallSpeed,
-                            });
-                            this.tiles[destination.y][destination.x] = this.tiles[i][j]
-                            this.tiles[coordinate.y][coordinate.x] = null;
-                            this.tiles[destination.y][destination.x].coordinate = new Phaser.Math.Vector2(destination.x, destination.y)
-                        }
+    refillMap() {
+       /* Remove existing tiles and add those in a pool */
+        for (var i = 0; i < this.visitedTiles.length; i++) {
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].visible = false;
+            this.pool.push(this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x]);
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x] = null;
+        }
+
+        /* Fall remaining tiles */
+        for (var i = this.options.grid.height - 1; i >= 0; i--) {
+            for (var j = 0; j < this.options.grid.width; j++) {
+                if (this.tiles[i][j] != null) {
+                    var holes = this.findHolesBelow(i, j);
+                    if(holes > 0) {
+                        var coordinate = new Phaser.Math.Vector2(this.tiles[i][j].coordinate.x, this.tiles[i][j].coordinate.y);
+                        var destination = new Phaser.Math.Vector2(j, i + holes);
+                        
+                        this.scene.tweens.add({
+                            targets: this.tiles[i][j],
+                            y: this.tiles[i][j].y + holes * this.tileSize,
+                            duration: this.options.fallSpeed,
+                        });
+                        this.tiles[destination.y][destination.x] = this.tiles[i][j]
+                        this.tiles[coordinate.y][coordinate.x] = null;
+                        this.tiles[destination.y][destination.x].coordinate = new Phaser.Math.Vector2(destination.x, destination.y)
                     }
                 }
             }
+        }
 
-            /* Place new tiles from the pool in missing spot */
-            for (var i = 0; i < this.options.grid.width; i++) {
-                var holes = this.findHolesInCol(i);
-                if (holes > 0) {
-                    for (var j = 1; j <= holes; j++) {
-                        var tileXPos = i * this.tileSize + this.tileSize / 2;
-                        var tileYPos = -j * this.tileSize + this.tileSize / 2;
-                        var theTile = this.pool.pop();
+        /* Place new tiles from the pool in missing spot */
+        for (var i = 0; i < this.options.grid.width; i++) {
+            var holes = this.findHolesInCol(i);
+            if (holes > 0) {
+                for (var j = 1; j <= holes; j++) {
+                    var tileXPos = i * this.tileSize + this.tileSize / 2;
+                    var tileYPos = -j * this.tileSize + this.tileSize / 2;
+                    var theTile = this.pool.pop();
 
-                        theTile.x = tileXPos;
-                        theTile.y = tileYPos;
-                        theTile.visible = true;
+                    theTile.x = tileXPos;
+                    theTile.y = tileYPos;
+                    theTile.visible = true;
 
-                        theTile.unselect();
+                    theTile.unselect();
 
-                        this.scene.tweens.add({
-                            targets: theTile,
-                            y: theTile.y + holes * this.tileSize,
-                            duration: this.options.fallSpeed,
-                        });
-                        
-                        theTile.coordinate = new Phaser.Math.Vector2(i, holes - j);
-                        theTile.setLetter(this.pickLetter());
-                        this.tiles[holes - j][i] = theTile;
-                    }
+                    this.scene.tweens.add({
+                        targets: theTile,
+                        y: theTile.y + holes * this.tileSize,
+                        duration: this.options.fallSpeed,
+                    });
+                    
+                    theTile.coordinate = new Phaser.Math.Vector2(i, holes - j);
+                    theTile.setLetter(this.pickLetter());
+                    this.tiles[holes - j][i] = theTile;
                 }
             }
         }
 
         this.startTurn();
-
-        this.visitedTiles = [];
-        this.visitedTiles.length = 0;
     }
 
     debugTiles() {
@@ -296,6 +294,15 @@ class Map extends Phaser.GameObjects.Container {
 
     startTurn() {
         console.log("startTurn");
+
+        /* Unselect and unhighligth all tiles */
+        for (let i = 0; i < this.visitedTiles.length; i++) {
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unhighlight();
+            this.tiles[this.visitedTiles[i].y][this.visitedTiles[i].x].unselect();
+        }
+
+        this.visitedTiles = [];
+        this.visitedTiles.length = 0;
 
         this.background.off('pointerdown', this.tilePicked, this);
         this.background.on('pointerdown', this.tilePicked, this);
