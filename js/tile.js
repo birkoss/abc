@@ -41,10 +41,12 @@ class Tile extends Phaser.GameObjects.Container {
         this.unhighlight();
     }
 
-    setLetter(letter) {
+    setLetter(letter, value) {
         this.letter = letter;
 
         this.label.text = this.letter;
+
+        this.letterValue.text = value;
     }
 
     setCoordinate(x, y) {
@@ -64,5 +66,12 @@ class Tile extends Phaser.GameObjects.Container {
         this.label.setOrigin(0.5);
         this.label.x = -2;
         this.add(this.label);
+
+        this.letterValue = this.scene.add.bitmapText(0, 0, "font:gui", "90", 10, Phaser.GameObjects.BitmapText.ALIGN_CENTER);
+        this.letterValue.tint = 0xb1a077;
+        this.letterValue.setOrigin(1);
+        this.letterValue.x = this.background.width/2 - 6;
+        this.letterValue.y = this.background.height/2 - 5;
+        this.add(this.letterValue);
     }
 };

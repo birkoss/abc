@@ -26,6 +26,8 @@ class Map extends Phaser.GameObjects.Container {
 
         this.pool = [];
 
+        this.letterValues = this.scene.cache.json.get('data:values');
+
         this.background = this.scene.add.sprite(0, 0, "tileset:forest");
         this.add(this.background);
 
@@ -42,7 +44,7 @@ class Map extends Phaser.GameObjects.Container {
 
                 var tile = new Tile(this.scene);
                 tile.setCoordinate(x, y);
-                tile.setLetter(this.pickLetter());
+                this.pickNewLetter(tile);
 
                 this.tiles[y][x] = tile;
 
@@ -268,7 +270,7 @@ class Map extends Phaser.GameObjects.Container {
                     });
                     
                     theTile.coordinate = new Phaser.Math.Vector2(i, holes - j);
-                    theTile.setLetter(this.pickLetter());
+                    this.pickNewLetter(theTile);
                     this.tiles[holes - j][i] = theTile;
                 }
             }
@@ -326,6 +328,12 @@ class Map extends Phaser.GameObjects.Container {
             }
         }
         return result;
+    }
+
+    pickNewLetter(tile) {
+        let letter = this.pickLetter();
+        let value = this.letterValues[letter];
+        tile.setLetter(letter, value);
     }
 
     tilePicked (e){
