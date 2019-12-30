@@ -5,6 +5,10 @@ class MainScene extends Phaser.Scene {
         });
     }
 
+    init(config) {
+        this.levelConfig = config;
+    }
+
     create() {
         this.cameras.main.backgroundColor = Phaser.Display.Color.HexStringToColor("#3f7cb6");
 
@@ -64,7 +68,7 @@ class MainScene extends Phaser.Scene {
             this.panel.points = 0;
         }
         this.panel.answer = answer;
-        this.panel.refresh();
+        this.panel.refresh(true);
     }
 
     onMapAnswerSubmitted(answer, isValid) {

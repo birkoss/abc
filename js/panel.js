@@ -133,8 +133,8 @@ class Panel extends Phaser.GameObjects.Container {
         this.emit("ATTACK_DONE");
     }
 
-    refresh() {
-        if (this.points > 0 && this.answer != "") {
+    refresh(isPreviewMode) {
+        if ((this.points > 0 && this.answer != "") || isPreviewMode) {
             this.txt_answer.text = this.answer + " (" + this.points + ")";
         } else {
             this.txt_answer.text = "";
