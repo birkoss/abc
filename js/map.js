@@ -208,7 +208,7 @@ class Map extends Phaser.GameObjects.Container {
 
         let wordValid = this.isValidWord();
 
-        if (wordValid) {
+        if (wordValid && this.answer.length > 1) {
             this.emit("ANSWER_SUBMITTED", this.answer);
  
         } else {
