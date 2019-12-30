@@ -56,6 +56,7 @@ class LevelScene extends Phaser.Scene {
         this.input.on('pointerdown', function (pointer) {
             this.pages.startX = this.pages.x;
             this.pages.lastX = pointer.x;
+            this.pages.diff = 0;
         }, this);   
 
         /* Move the levels container and keep track of the last position */

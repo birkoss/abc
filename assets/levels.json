@@ -1,0 +1,27 @@
+{
+	"001": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+	"002": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+	"003": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+	"004": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+	"005": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+	"006": {
+		"enemy": "skeleton",
+		"health": 100
+	},
+
+}
