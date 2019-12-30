@@ -25,8 +25,6 @@ class MainScene extends Phaser.Scene {
         this.panel = new Panel(this);
         this.panel.create("skeleton", 100);
         this.panel.on("ATTACK_DONE", this.onPanelAttackDone, this);
-
-        console.log(this.background.displayWidth + "x" + this.background.displayHeight);
     }
 
     /* Events */
@@ -52,7 +50,16 @@ class MainScene extends Phaser.Scene {
  
     onMapAnswerChanged(answer, isValid) {
         if (isValid) {
-            this.panel.points = answer.length * (answer.length - 1);
+            let letterValues = this.cache.json.get('data:values');
+
+            /* Get the total point for this word for each letter */
+            let wordPoints = 0;
+            for (let i=0; i<answer.length; i++) {
+                wordPoints += letterValues[answer[i]];
+            }
+            
+            /* Old score was : answer.length * (answer.length - 1) */
+            this.panel.points = wordPoints * (answer.length - 1);
         } else {
             this.panel.points = 0;
         }

@@ -27,6 +27,7 @@ class BootScene extends Phaser.Scene {
 
         this.load.json('data:frequency', 'assets/frequency.json');
         this.load.json('data:words', 'assets/words.json');
+        this.load.json('data:values', 'assets/values.json');
         this.load.json('data:units', 'assets/units.json');
     }
  
