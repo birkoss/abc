@@ -27,8 +27,17 @@ class MainScene extends Phaser.Scene {
         this.background.y = this.map.y - 15;
 
         this.panel = new Panel(this);
-        this.panel.create("skeleton", 100);
+        this.panel.create(this.levelConfig.data.enemy, this.levelConfig.data.health);
         this.panel.on("ATTACK_DONE", this.onPanelAttackDone, this);
+    }
+
+    showPopup(popup_type, config) {
+        this.scene.pause();
+
+        var popup = new PopupScene(popup_type, config);
+        popup.setEvent(this.onPopupButtonClicked, this);
+
+        this.scene.add("popup_" + popup_type, popup, true);
     }
 
     /* Events */
@@ -38,10 +47,24 @@ class MainScene extends Phaser.Scene {
         this.panel.refresh();
 
         if (this.panel.enemy.health == 0) {
-            alert("You win!");
-            this.registry.destroy();
-            this.events.off();
-            this.scene.restart();
+            let savegame = this.game.load();
+            if (savegame.levels[this.levelConfig.ID] == null || savegame.levels[this.levelConfig.ID] == undefined) {
+                savegame.levels[this.levelConfig.ID] = {
+                    tries: 0,
+                    stars: 0
+                }
+            }
+
+            let stars = 0;
+
+            savegame.levels[this.levelConfig.ID]['tries']++;
+            if (savegame.levels[this.levelConfig.ID]['stars'] < stars) {
+                savegame.levels[this.levelConfig.ID]['stars'] = stars;
+            }
+
+            this.game.save(savegame);
+
+            this.showPopup("win", {stars: stars});
         } else if (this.panel.player.health == 0) {
             alert("You lose!");
             this.registry.destroy();
@@ -73,6 +96,27 @@ class MainScene extends Phaser.Scene {
 
     onMapAnswerSubmitted(answer, isValid) {
         this.panel.attack(this.panel.points);
+    }
+
+    onPopupButtonClicked(popup_type, button_text) {
+        switch (popup_type) {
+            case "leave":
+                switch (button_text) {
+                    case "Oui":
+                        this.scene.start('LevelScene');
+                        break;
+                    case "Non":
+                        this.scene.resume();
+                        break;
+                }
+                break;
+            case "gameover":
+                this.scene.start('LevelScene');
+                break;
+            case "win":
+                this.scene.start('LevelScene');
+                break;
+        }
     }
 
 

@@ -42,7 +42,7 @@ class PopupScene extends Phaser.Scene {
 
         switch (this.getType()) {
             case "level_selector":
-                inside_background_sprite = "inside_large";
+                inside_background_sprite = "inside_medium";
                 break;
             case "level_locked":
                 inside_background_sprite = "inside_large";
@@ -76,19 +76,20 @@ class PopupScene extends Phaser.Scene {
 
         switch (this.getType()) {
             case "level_selector":
-                this.message.text = "Es-tu sur de\nvouloir essayer\nce niveau?";
-                this.message.y = 50;
+                this.message.text = "Niveau #" + this.config.level.ID;
+                this.message.text += "\n\nTenter de battre\nce niveau?";
+                this.message.y = 40;
 
                 button = new CustomButton(this, "Oui", "popup");
                 button.x = (background.width - button.getBounds().width) / 2;
-                button.y = (this.message.y * 2) + this.message.height + 56;
+                button.y = (this.message.y * 2) + this.message.height + 30;
                 button.on("BUTTON_CLICKED", this.onButtonClicked, this);
                 this.buttons.add(button);
                 this.popup_container.add(button);
 
                 button = new CustomButton(this, "Non", "popup");
                 button.x = (background.width - button.getBounds().width) / 2;
-                button.y = (this.message.y * 2) + this.message.height + 114;
+                button.y = (this.message.y * 2) + this.message.height + 88;
                 button.on("BUTTON_CLICKED", this.onButtonClicked, this);
                 this.buttons.add(button);
                 this.popup_container.add(button);

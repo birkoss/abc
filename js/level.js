@@ -18,8 +18,6 @@ class Level extends Phaser.GameObjects.Container {
     }
 
     create() {
-        console.log(this.config);
-
         this.background = this.scene.add.sprite(0, 0, "tileset:forest");
         this.background.setOrigin(0);
         this.background.displayWidth = 100;

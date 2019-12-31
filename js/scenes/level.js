@@ -21,7 +21,10 @@ class LevelScene extends Phaser.Scene {
 
         let levels = this.cache.json.get('data:levels');
 
+        let savegame = this.game.load();
         let isLocked = false;
+
+        console.log(savegame);
 
         let index = 0;
         for (var levelID in levels) {
@@ -49,7 +52,9 @@ class LevelScene extends Phaser.Scene {
             this.pages.add(level);
 
             /* Check if the current level is locked, to lock the remaining levels */
-            isLocked = true;
+            if (savegame.levels[levelID] == null || savegame.levels[levelID] == undefined) {
+                isLocked = true;
+            }
 
             index++;
         }
@@ -95,9 +100,9 @@ class LevelScene extends Phaser.Scene {
                 this.changePage(0);
                 if (this.currentLevel != null) {
                     if (this.currentLevel.config.isLocked) {
-                        this.showPopup("level_locked", {levelID:this.currentLevel.config.ID});
+                        this.showPopup("level_locked", {level:this.currentLevel.config});
                     } else {
-                        this.changeLevel(this.currentLevel.config.ID);
+                        this.showPopup("level_selector", {level:this.currentLevel.config});
                     }
                 }
             }
@@ -135,10 +140,6 @@ class LevelScene extends Phaser.Scene {
         this.scene.add("popup_" + popup_type, popup, true);
     }
 
-    changeLevel(levelID) {
-        this.showPopup("level_selector", {levelID:levelID});
-    }
-
     onLevelPressed(level) {
         this.currentLevel = level;
 
@@ -150,7 +151,7 @@ class LevelScene extends Phaser.Scene {
             case "level_selector":
                 switch (button_text) {
                     case "Oui":
-                        this.scene.start('MainScene', {levelID: popupConfig.levelID});
+                        this.scene.start('MainScene', popupConfig.level);
                         break;
                     case "Non":
                         this.scene.resume();
