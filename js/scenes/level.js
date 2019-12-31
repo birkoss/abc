@@ -19,32 +19,39 @@ class LevelScene extends Phaser.Scene {
         let startAtX = (this.pageWidth - padding) / 2;
         let levelsPerPage = 15;
 
-        for (let i=0; i<25; i++) {
-            this.currentPage = Math.floor(i / levelsPerPage);
+        let levels = this.cache.json.get('data:levels');
+
+        let isLocked = false;
+
+        let index = 0;
+        for (var levelID in levels) {
+            this.currentPage = Math.floor(index / levelsPerPage);
             let pageStartAtX = this.currentPage * this.pageWidth;
 
-            let level = this.add.sprite(0, 0, "tileset:forest");
-            level.setOrigin(0);
+            let levelConfig = {
+                ID: levelID,
+                data: levels[levelID],
+                index: index + 1,
+                isLocked: isLocked
+            }
 
-            level.displayWidth = 100;
-            level.displayHeight = 100;
-            level.levelID = i;
+            let level = new Level(this, levelConfig);
+            level.on('LEVEL_CLICKED', this.onLevelPressed, this);
 
-            let indexInPage = (i - (this.currentPage * levelsPerPage));
+            let indexInPage = (index - (this.currentPage * levelsPerPage));
 
             let y = Math.floor(indexInPage / 3);
             let x = indexInPage - (y * 3);
 
-            level.x = (x * (level.displayWidth + 10)) + startAtX + pageStartAtX;
-            level.y = y * (level.displayHeight + 10);
-
-            level.setInteractive();
-            level.on('pointerdown', function (pointer) {
-                this.currentLevel = level;
-                level.alpha = 0.4;
-            }, this);
+            level.x = (x * (level.getBounds().width + 10)) + startAtX + pageStartAtX;
+            level.y = y * (level.getBounds().height + 10);
 
             this.pages.add(level);
+
+            /* Check if the current level is locked, to lock the remaining levels */
+            isLocked = true;
+
+            index++;
         }
 
         this.pages.y = (this.sys.canvas.height - this.pages.getBounds().height) / 2;
@@ -68,7 +75,7 @@ class LevelScene extends Phaser.Scene {
             this.pages.diff = this.pages.x - this.pages.startX;
 
             if (this.currentLevel != null && (this.pages.diff > this.pageThreshold || this.pages.diff < this.pageThreshold * -1)) {
-                this.currentLevel.alpha = 1;
+                this.currentLevel.unselect();
                 this.currentLevel = null;
             }
 
@@ -77,7 +84,7 @@ class LevelScene extends Phaser.Scene {
         /* Animate the levels container depending on the new page */
         this.input.on('pointerup', function (pointer) {
             if (this.currentLevel != null) {
-                this.currentLevel.alpha = 1;
+                this.currentLevel.unselect();
             }
 
             if (this.pages.diff > this.pageThreshold) {
@@ -87,7 +94,11 @@ class LevelScene extends Phaser.Scene {
             } else {
                 this.changePage(0);
                 if (this.currentLevel != null) {
-                    this.changeLevel(this.currentLevel.levelID);
+                    if (this.currentLevel.config.isLocked) {
+                        this.showPopup("level_locked", {levelID:this.currentLevel.config.ID});
+                    } else {
+                        this.changeLevel(this.currentLevel.config.ID);
+                    }
                 }
             }
 
@@ -115,8 +126,41 @@ class LevelScene extends Phaser.Scene {
         });
     }
 
+    showPopup(popup_type, popup_config) {
+        this.scene.pause();
+
+        let popup = new PopupScene(popup_type, popup_config);
+        popup.setEvent(this.onPopupButtonClicked, this);
+        
+        this.scene.add("popup_" + popup_type, popup, true);
+    }
+
     changeLevel(levelID) {
-        this.scene.start('MainScene', {levelID: levelID});
+        this.showPopup("level_selector", {levelID:levelID});
+    }
+
+    onLevelPressed(level) {
+        this.currentLevel = level;
+
+        this.currentLevel.select();
+    }
+
+    onPopupButtonClicked(popup_type, button_text, popupConfig) {
+        switch (popup_type) {
+            case "level_selector":
+                switch (button_text) {
+                    case "Oui":
+                        this.scene.start('MainScene', {levelID: popupConfig.levelID});
+                        break;
+                    case "Non":
+                        this.scene.resume();
+                        break;
+                }
+                break;
+            case "level_locked":
+                this.scene.resume();
+                break;
+        }
     }
 
 };

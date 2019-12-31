@@ -6,6 +6,15 @@ class BootScene extends Phaser.Scene {
     }
  
     preload() {
+        this.load.image('popup:background', 'assets/sprites/popup_background.png');
+        this.load.image('popup:inside_small', 'assets/sprites/popup_inside_small.png');
+        this.load.image('popup:inside_medium', 'assets/sprites/popup_inside_medium.png');
+        this.load.image('popup:inside_large', 'assets/sprites/popup_inside_large.png');
+
+        this.load.spritesheet('big_buttons', 'assets/sprites/big_buttons.png', { frameWidth: 190, frameHeight: 98 });
+        this.load.spritesheet('long_buttons', 'assets/sprites/long_buttons.png', { frameWidth: 190, frameHeight: 49 });
+        this.load.spritesheet('small_buttons', 'assets/sprites/small_buttons.png', { frameWidth: 45, frameHeight: 49 });
+
 
         this.load.spritesheet('tileset:forest', 'assets/sprites/forest.png', { frameWidth: 24, frameHeight: 24 });
         this.load.spritesheet('tileset:units', 'assets/sprites/units.png', { frameWidth: 24, frameHeight: 24 });
@@ -29,6 +38,7 @@ class BootScene extends Phaser.Scene {
         this.load.json('data:words', 'assets/words.json');
         this.load.json('data:values', 'assets/values.json');
         this.load.json('data:units', 'assets/units.json');
+        this.load.json('data:levels', 'assets/levels.json');
     }
  
     create() {

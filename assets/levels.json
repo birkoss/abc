@@ -5,23 +5,23 @@
 	},
 	"002": {
 		"enemy": "skeleton",
-		"health": 100
+		"health": 120
 	},
 	"003": {
 		"enemy": "skeleton",
-		"health": 100
+		"health": 140
 	},
 	"004": {
 		"enemy": "skeleton",
-		"health": 100
+		"health": 160
 	},
 	"005": {
 		"enemy": "skeleton",
-		"health": 100
+		"health": 180
 	},
 	"006": {
 		"enemy": "skeleton",
-		"health": 100
-	},
+		"health": 200
+	}
 
 }
