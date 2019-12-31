@@ -9,7 +9,6 @@ class CustomButton extends Phaser.GameObjects.Container {
         this.background.setOrigin(0);
         this.add(this.background);
 
-       //this.timer_text = this.add.bitmapText(0, 2, "font:gui", "", 20);
         this.label = new Phaser.GameObjects.BitmapText(scene, this.background.width / 2, this.background.height / 2, "font:gui", text, 20);
         this.label.setOrigin(0.5);
         this.label.tint = 0xd4d8e9;
@@ -24,7 +23,6 @@ class CustomButton extends Phaser.GameObjects.Container {
 
     disable() {
         this.isDisabled = true;
-        //this.background.setFrame(1);
         this.alpha = 0.8;
         this.label.tint = 0x727685;
     	this.background.disableInteractive();

@@ -7,6 +7,10 @@ class PopupScene extends Phaser.Scene {
         this.popup_type = type;
         this.config = config;
 
+        if (this.config == undefined) {
+            this.config = {};
+        }
+
         this.handler = null;
     }
  
@@ -250,6 +254,7 @@ class PopupScene extends Phaser.Scene {
     }
 
     onButtonClicked(button) {
+        console.log(button);
         this.config['buttonText'] = button.label.text;
 
         console.log("popup.onButtonClicked");

@@ -88,6 +88,12 @@ class Panel extends Phaser.GameObjects.Container {
         this.playerHealth.tint = 0xdcdcdc;
         this.battlefield.add(this.playerHealth);
 
+        let button = new CustomButton(this.scene, "Quitter", "close");
+        button.x = (this.scene.sys.game.canvas.width - button.getBounds().width) / 2;
+        button.y = 0;
+        button.on("BUTTON_CLICKED", this.onButtonClicked, this);
+        this.add(button);
+
         this.refresh();
     }
 
@@ -104,6 +110,19 @@ class Panel extends Phaser.GameObjects.Container {
             callbackScope: this
         });
     }
+
+    refresh(isPreviewMode) {
+        if ((this.points > 0 && this.answer != "") || isPreviewMode) {
+            this.txt_answer.text = this.answer + " (" + this.points + ")";
+        } else {
+            this.txt_answer.text = "";
+        }
+
+        this.enemyHealth.text = this.enemy.health;
+        this.playerHealth.text = this.player.health;
+    }
+
+    /* Events */
 
     onAttackMoved() {
         this.attackEffect = this.scene.add.sprite(0, 0, "tileset:effectsLarge");
@@ -133,14 +152,7 @@ class Panel extends Phaser.GameObjects.Container {
         this.emit("ATTACK_DONE");
     }
 
-    refresh(isPreviewMode) {
-        if ((this.points > 0 && this.answer != "") || isPreviewMode) {
-            this.txt_answer.text = this.answer + " (" + this.points + ")";
-        } else {
-            this.txt_answer.text = "";
-        }
-
-        this.enemyHealth.text = this.enemy.health;
-        this.playerHealth.text = this.player.health;
+    onButtonClicked(button) {
+        this.emit("LEAVE_GAME");
     }
 };

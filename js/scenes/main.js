@@ -29,6 +29,7 @@ class MainScene extends Phaser.Scene {
         this.panel = new Panel(this);
         this.panel.create(this.levelConfig.data.enemy, this.levelConfig.data.health);
         this.panel.on("ATTACK_DONE", this.onPanelAttackDone, this);
+        this.panel.on("LEAVE_GAME", this.onPanelLeaveGame, this);
     }
 
     showPopup(popup_type, config) {
@@ -41,6 +42,10 @@ class MainScene extends Phaser.Scene {
     }
 
     /* Events */
+
+    onPanelLeaveGame() {
+        this.showPopup("leave");
+    }
 
     onPanelAttackDone() {
         this.panel.answer = "";
