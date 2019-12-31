@@ -1,5 +1,5 @@
 class Map extends Phaser.GameObjects.Container {
-    constructor(scene, x, y) {
+    constructor(scene, levelConfig) {
         super(scene);
         scene.add.existing(this);
 
@@ -10,6 +10,8 @@ class Map extends Phaser.GameObjects.Container {
                 height: 8
             }
         };
+
+        this.levelConfig = levelConfig;
 
         this.tileSize = 70;
 
@@ -67,6 +69,8 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     pickLetter() {
+        let new_letter = "E";
+
         let rnd = Phaser.Math.RND.realInRange(0, this.totalFrequencies);
         let lastTotal = 0;
 
@@ -74,12 +78,30 @@ class Map extends Phaser.GameObjects.Container {
             let currentValue = this.scene.cache.json.get('data:frequency')[letter];
 
             if (rnd >= lastTotal && rnd <= lastTotal + currentValue) {
-                return letter;
+                new_letter = letter;
+                break;
             }
             lastTotal += currentValue;
         }
 
-        return "E";
+        /* Check if this letter is excluded by the level's rules */
+        if (this.levelConfig.data.rules != undefined) {
+            this.levelConfig.data.rules.forEach(single_rule => {
+                if (single_rule.type == "letter_exclude") {
+                    single_rule.letters.forEach(single_letter => {
+                        if (single_letter == letter) {
+                            new_letter = "#";
+                        }
+                    }, this);
+                }
+            }, this);
+        }
+        /* If it's a letter we must remove, pick a new one instead */
+        if (new_letter == "#") {
+            new_letter = this.pickLetter();
+        }
+
+        return new_letter;
     }
  
     isNeighboor(pos1, pos2) {
@@ -210,7 +232,11 @@ class Map extends Phaser.GameObjects.Container {
 
         let wordValid = this.isValidWord();
 
-        if (wordValid && this.answer.length > 1) {
+        /* Allow to overwrite the min word length by a level's rules */
+        let minWordLength = this.pickMinWordLength();
+
+        /* @TODO: Show something to alert the player when the minWord is > 1 and the player attempt a small word */
+        if (wordValid && this.answer.length > minWordLength) {
             this.emit("ANSWER_SUBMITTED", this.answer);
  
         } else {
@@ -330,9 +356,45 @@ class Map extends Phaser.GameObjects.Container {
         return result;
     }
 
+    pickMinWordLength() {
+        let minWordLength = 1;
+
+        if (this.levelConfig.data.rules != undefined) {
+            this.levelConfig.data.rules.forEach(single_rule => {
+                if (single_rule.type == "word_min_length") {
+                    minWordLength = single_rule.length;
+                }
+            }, this);
+        }
+
+        return minWordLength;
+    }
+
+    pickLetterValue(letter) {
+        let value = this.letterValues[letter];
+
+        /* Check if the letter need to be overwritten by the level's rules */
+        if (this.levelConfig.data.rules != undefined) {
+            this.levelConfig.data.rules.forEach(single_rule => {
+                if (single_rule.type == "letter_value") {
+                    single_rule.letters.forEach(single_letter => {
+                        if (single_letter[letter] != undefined) {
+                            value = single_letter[letter];
+                        } else if (single_letter["*"] != undefined) {
+                            value = single_letter["*"];
+                        }
+                    }, this);
+                }
+            }, this);
+        }
+
+        return value;
+    }
+
     pickNewLetter(tile) {
         let letter = this.pickLetter();
-        let value = this.letterValues[letter];
+        let value = this.pickLetterValue(letter);
+
         tile.setLetter(letter, value);
     }
 

@@ -15,7 +15,7 @@ class MainScene extends Phaser.Scene {
         this.background = this.add.sprite(0, 0, "map");
         this.background.setOrigin(0);
 
-        this.map = new Map(this);
+        this.map = new Map(this, this.levelConfig);
 
         this.map.x = (this.sys.game.canvas.width - this.map.getBounds().width) / 2;
         this.map.y = this.sys.game.canvas.height - this.map.getBounds().height - this.map.x;
@@ -77,16 +77,19 @@ class MainScene extends Phaser.Scene {
  
     onMapAnswerChanged(answer, isValid) {
         if (isValid) {
-            let letterValues = this.cache.json.get('data:values');
-
             /* Get the total point for this word for each letter */
             let wordPoints = 0;
             for (let i=0; i<answer.length; i++) {
-                wordPoints += letterValues[answer[i]];
+                wordPoints += this.map.pickLetterValue(answer[i]);
             }
             
             /* Old score was : answer.length * (answer.length - 1) */
             this.panel.points = wordPoints * (answer.length - 1);
+
+            /* If the word is smaller than the minimum accepted, reset the point */
+            if (answer.length <= this.map.pickMinWordLength()) {
+                this.panel.points = 0;
+            }
         } else {
             this.panel.points = 0;
         }

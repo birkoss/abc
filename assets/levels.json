@@ -5,15 +5,31 @@
 	},
 	"002": {
 		"enemy": "skeleton",
-		"health": 120
+		"health": 120,
+		"rules": [{
+			"type": "letter_value",
+			"letters": [{
+				"A": 0
+			}]
+		}]
 	},
 	"003": {
 		"enemy": "skeleton",
-		"health": 140
+		"health": 140,
+		"rules": [{
+			"type": "word_min_length",
+			"length": 4
+		}]
 	},
 	"004": {
 		"enemy": "skeleton",
-		"health": 160
+		"health": 160,
+		"rules": [{
+			"type": "letter_exclude",
+			"letters": [
+				"A"
+			]
+		}]
 	},
 	"005": {
 		"enemy": "skeleton",
